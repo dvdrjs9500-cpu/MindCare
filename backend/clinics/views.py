@@ -15,7 +15,7 @@ class ClinicViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
     
     @action(detail=False, methods=['get'])
-    def list(self, request):
+    def all_clinics(self, request):
         """List all clinics"""
         clinics = Clinic.objects.filter(is_verified=True).order_by('-average_rating')
         
@@ -53,7 +53,7 @@ class ClinicViewSet(viewsets.ViewSet):
         })
     
     @action(detail=False, methods=['get'], url_path='(?P<clinic_id>[^/.]+)')
-    def retrieve(self, request, clinic_id=None):
+    def clinic_detail(self, request, clinic_id=None):
         """Get clinic detail"""
         try:
             clinic = Clinic.objects.get(id=clinic_id)
@@ -129,6 +129,64 @@ class ClinicViewSet(viewsets.ViewSet):
 class ClinicRecommendationViewSet(viewsets.ViewSet):
     """ViewSet for clinic recommendations"""
     permission_classes = [permissions.IsAuthenticated]
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def nearest_clinics(self, request):
+        """Find nearest clinics by coordinates"""
+        latitude = request.query_params.get('latitude')
+        longitude = request.query_params.get('longitude')
+        radius_km = float(request.query_params.get('radius', 50))
+        specialization = request.query_params.get('specialization', '')
+        
+        if not latitude or not longitude:
+            return Response(
+                {'error': 'Latitude and longitude required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user_lat = float(latitude)
+            user_lon = float(longitude)
+        except ValueError:
+            return Response(
+                {'error': 'Invalid coordinates'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        clinics = Clinic.objects.filter(is_verified=True)
+        
+        if specialization:
+            clinics = clinics.filter(specializations__icontains=specialization)
+        
+        # Calculate distance for each clinic
+        def get_distance(lat2, lon2):
+            R = 6371  # Earth's radius in km
+            lat1, lon1 = radians(user_lat), radians(user_lon)
+            lat2, lon2 = radians(lat2), radians(lon2)
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+            c = 2 * atan2(sqrt(a), sqrt(1 - a))
+            return R * c
+        
+        clinics_with_distance = []
+        for clinic in clinics:
+            distance = get_distance(clinic.latitude, clinic.longitude)
+            if distance <= radius_km:
+                clinics_with_distance.append((clinic, distance))
+        
+        # Sort by distance
+        clinics_with_distance.sort(key=lambda x: x[1])
+        clinics_sorted = [clinic for clinic, _ in clinics_with_distance]
+        
+        serializer = ClinicListSerializer(clinics_sorted[:10], many=True)
+        return Response({
+            'latitude': user_lat,
+            'longitude': user_lon,
+            'radius_km': radius_km,
+            'count': len(clinics_sorted),
+            'results': serializer.data
+        })
     
     @action(detail=False, methods=['get'])
     def my_recommendations(self, request):
