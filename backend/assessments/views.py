@@ -12,6 +12,8 @@ from assessments.serializers import (
     AssessmentHistorySerializer
 )
 from django.db.models import Q
+from ml_models import score_quiz, detect_from_video
+import os
 
 
 class QuizViewSet(viewsets.ViewSet):
@@ -65,6 +67,7 @@ class QuizResultViewSet(viewsets.ViewSet):
         total_score = 0
         max_score = 0
         responses_data = []
+        responses_values = []  # For ML model
         
         for response_data in serializer.validated_data['responses']:
             question_id = int(response_data.get('question_id'))
@@ -77,6 +80,7 @@ class QuizResultViewSet(viewsets.ViewSet):
                 if option_id:
                     option = question.options.get(id=option_id)
                     total_score += option.score_value
+                    responses_values.append(option.score_value)  # For ML
                     
                     UserQuizResponse.objects.create(
                         quiz_result=None,
@@ -92,18 +96,38 @@ class QuizResultViewSet(viewsets.ViewSet):
             except (QuizQuestion.DoesNotExist, Exception):
                 continue
         
-        # Create quiz result
-        percentage = (total_score / max_score * 100) if max_score > 0 else 0
-        
-        # Simple diagnosis logic (should be ML-based)
-        if percentage >= 80:
-            diagnosis = 'SEVERE'
-        elif percentage >= 60:
-            diagnosis = 'MODERATE'
-        elif percentage >= 40:
-            diagnosis = 'MILD'
-        else:
-            diagnosis = 'NONE'
+        # Use ML model for diagnosis (Naive Bayes)
+        try:
+            # Ensure we have the right number of responses for PHQ-9
+            if len(responses_values) == 9:
+                ml_result = score_quiz(responses_values)
+                diagnosis = ml_result['diagnosis']
+                confidence = ml_result['confidence']
+                percentage = ml_result['percentage']
+            else:
+                # Fallback for other quiz types
+                percentage = (total_score / max_score * 100) if max_score > 0 else 0
+                if percentage >= 80:
+                    diagnosis = 'SEVERE'
+                elif percentage >= 60:
+                    diagnosis = 'MODERATE'
+                elif percentage >= 40:
+                    diagnosis = 'MILD'
+                else:
+                    diagnosis = 'NONE'
+                confidence = 0.75
+        except Exception as e:
+            # Fallback if ML model fails
+            percentage = (total_score / max_score * 100) if max_score > 0 else 0
+            if percentage >= 80:
+                diagnosis = 'SEVERE'
+            elif percentage >= 60:
+                diagnosis = 'MODERATE'
+            elif percentage >= 40:
+                diagnosis = 'MILD'
+            else:
+                diagnosis = 'NONE'
+            confidence = 0.70
         
         quiz_result = QuizResult.objects.create(
             user=request.user,
@@ -112,7 +136,7 @@ class QuizResultViewSet(viewsets.ViewSet):
             max_possible_score=max_score,
             percentage_score=percentage,
             diagnosis=diagnosis,
-            confidence=0.85,
+            confidence=confidence,
             time_taken_seconds=serializer.validated_data['time_taken_seconds'],
             device_type=serializer.validated_data['device_type']
         )
@@ -198,6 +222,89 @@ class VideoAnalysisViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         except VideoAnalysis.DoesNotExist:
             return Response({'error': 'Analysis not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=False, methods=['post'])
+    def upload_video(self, request):
+        """Upload and analyze video using emotion detection"""
+        if 'video' not in request.FILES:
+            return Response(
+                {'error': 'Video file required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        video_file = request.FILES['video']
+        
+        # Save video temporarily
+        temp_media_dir = os.path.join('/tmp', 'mindcare_videos')
+        os.makedirs(temp_media_dir, exist_ok=True)
+        temp_video_path = os.path.join(temp_media_dir, f"{request.user.id}_{video_file.name}")
+        
+        # Write video file
+        with open(temp_video_path, 'wb+') as destination:
+            for chunk in video_file.chunks():
+                destination.write(chunk)
+        
+        try:
+            # Create video analysis record
+            video_analysis = VideoAnalysis.objects.create(
+                user=request.user,
+                video_file=video_file,
+                video_name=video_file.name,
+                file_size=video_file.size
+            )
+            
+            # Run emotion detection using ML model
+            try:
+                emotion_result = detect_from_video(temp_video_path)
+                
+                if emotion_result['detected']:
+                    # Store emotion frames
+                    emotions = emotion_result.get('emotion_averages', {})
+                    for frame_idx, emotion_scores in enumerate([emotions] * 3):  # Sample 3 frames worth
+                        EmotionFrame.objects.create(
+                            analysis=video_analysis,
+                            frame_number=frame_idx,
+                            emotion_scores=emotion_scores,
+                            timestamp=frame_idx
+                        )
+                    
+                    # Update video analysis with emotion results
+                    depression_score = emotion_result.get('depression_score', 0)
+                    depression_level = emotion_result.get('depression_level', 'NONE')
+                    
+                    video_analysis.depression_score = depression_score
+                    video_analysis.emotion_summary = emotion_result.get('emotion_averages', {})
+                    video_analysis.analysis_status = 'COMPLETED'
+                    video_analysis.save()
+                    
+                    # Update assessment history
+                    AssessmentHistory.objects.create(
+                        user=request.user,
+                        assessment_type='VIDEO',
+                        video_analysis=video_analysis,
+                        overall_diagnosis=depression_level,
+                        overall_score=depression_score,
+                        risk_level='HIGH' if depression_score >= 60 else 'MEDIUM' if depression_score >= 40 else 'LOW'
+                    )
+                else:
+                    video_analysis.analysis_status = 'NO_FACES_DETECTED'
+                    video_analysis.save()
+            
+            except Exception as ml_error:
+                video_analysis.analysis_status = 'ERROR'
+                video_analysis.save()
+                return Response(
+                    {'error': f'Video analysis failed: {str(ml_error)}', 'created': True, 'analysis_id': str(video_analysis.id)},
+                    status=status.HTTP_202_ACCEPTED
+                )
+            
+            serializer = VideoAnalysisDetailSerializer(video_analysis)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_video_path):
+                os.remove(temp_video_path)
 
 
 class AssessmentHistoryViewSet(viewsets.ViewSet):
