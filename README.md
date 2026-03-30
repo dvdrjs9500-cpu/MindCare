@@ -341,5 +341,181 @@ For questions, feedback, or collaboration inquiries, please reach out:
 **This system is designed for preliminary screening purposes only and should NOT be used as a substitute for professional medical diagnosis or treatment. Always consult with a licensed psychiatrist or mental health professional for proper evaluation and treatment.**
 
 ---
+# File Tree: MindCare
 
+**Generated:** 3/30/2026, 6:59:54 PM
+**Root Path:** `c:\Users\KiTE\Downloads\MindCare`
+
+```
+├── 📁 app
+│   ├── 📁 emotion-detect
+│   │   └── 📄 page.tsx
+│   ├── 📁 hooks
+│   │   └── 📄 useApi.ts
+│   ├── 📁 lib
+│   │   └── 📄 api-client.ts
+│   ├── 📁 login
+│   │   └── 📄 page.tsx
+│   ├── 📁 quiz
+│   │   └── 📄 page.tsx
+│   ├── 📁 signup
+│   │   └── 📄 page.tsx
+│   ├── 🎨 globals.css
+│   ├── 📄 layout.tsx
+│   └── 📄 page.tsx
+├── 📁 backend
+│   ├── 📁 assessments
+│   │   ├── 📁 migrations
+│   │   │   ├── 🐍 0001_initial.py
+│   │   │   ├── 🐍 0002_initial.py
+│   │   │   └── 🐍 __init__.py
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 admin.py
+│   │   ├── 🐍 apps.py
+│   │   ├── 🐍 models.py
+│   │   ├── 🐍 serializers.py
+│   │   ├── 🐍 tests.py
+│   │   ├── 🐍 urls.py
+│   │   └── 🐍 views.py
+│   ├── 📁 clinics
+│   │   ├── 📁 migrations
+│   │   │   ├── 🐍 0001_initial.py
+│   │   │   ├── 🐍 0002_initial.py
+│   │   │   └── 🐍 __init__.py
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 admin.py
+│   │   ├── 🐍 apps.py
+│   │   ├── 🐍 models.py
+│   │   ├── 🐍 serializers.py
+│   │   ├── 🐍 tests.py
+│   │   ├── 🐍 urls.py
+│   │   └── 🐍 views.py
+│   ├── 📁 config
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 asgi.py
+│   │   ├── 🐍 settings.py
+│   │   ├── 🐍 urls.py
+│   │   └── 🐍 wsgi.py
+│   ├── 📁 ml_models
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 emotion_detector.py
+│   │   └── 🐍 quiz_scorer.py
+│   ├── 📁 users
+│   │   ├── 📁 migrations
+│   │   │   ├── 🐍 0001_initial.py
+│   │   │   └── 🐍 __init__.py
+│   │   ├── 🐍 __init__.py
+│   │   ├── 🐍 admin.py
+│   │   ├── 🐍 apps.py
+│   │   ├── 🐍 models.py
+│   │   ├── 🐍 serializers.py
+│   │   ├── 🐍 tests.py
+│   │   ├── 🐍 urls.py
+│   │   └── 🐍 views.py
+│   ├── 📄 db.sqlite3
+│   ├── 🐍 manage.py
+│   ├── 📄 requirements.txt
+│   └── 🐍 test_api.py
+├── 📁 components
+│   ├── 📁 quiz
+│   │   ├── 📄 quiz-intro.tsx
+│   │   ├── 📄 quiz-question.tsx
+│   │   └── 📄 quiz-results.tsx
+│   ├── 📁 ui
+│   │   ├── 📄 accordion.tsx
+│   │   ├── 📄 alert-dialog.tsx
+│   │   ├── 📄 alert.tsx
+│   │   ├── 📄 aspect-ratio.tsx
+│   │   ├── 📄 avatar.tsx
+│   │   ├── 📄 badge.tsx
+│   │   ├── 📄 breadcrumb.tsx
+│   │   ├── 📄 button-group.tsx
+│   │   ├── 📄 button.tsx
+│   │   ├── 📄 calendar.tsx
+│   │   ├── 📄 card.tsx
+│   │   ├── 📄 carousel.tsx
+│   │   ├── 📄 chart.tsx
+│   │   ├── 📄 checkbox.tsx
+│   │   ├── 📄 collapsible.tsx
+│   │   ├── 📄 command.tsx
+│   │   ├── 📄 context-menu.tsx
+│   │   ├── 📄 dialog.tsx
+│   │   ├── 📄 drawer.tsx
+│   │   ├── 📄 dropdown-menu.tsx
+│   │   ├── 📄 empty.tsx
+│   │   ├── 📄 field.tsx
+│   │   ├── 📄 form.tsx
+│   │   ├── 📄 hover-card.tsx
+│   │   ├── 📄 input-group.tsx
+│   │   ├── 📄 input-otp.tsx
+│   │   ├── 📄 input.tsx
+│   │   ├── 📄 item.tsx
+│   │   ├── 📄 kbd.tsx
+│   │   ├── 📄 label.tsx
+│   │   ├── 📄 menubar.tsx
+│   │   ├── 📄 navigation-menu.tsx
+│   │   ├── 📄 pagination.tsx
+│   │   ├── 📄 popover.tsx
+│   │   ├── 📄 progress.tsx
+│   │   ├── 📄 radio-group.tsx
+│   │   ├── 📄 resizable.tsx
+│   │   ├── 📄 scroll-area.tsx
+│   │   ├── 📄 select.tsx
+│   │   ├── 📄 separator.tsx
+│   │   ├── 📄 sheet.tsx
+│   │   ├── 📄 sidebar.tsx
+│   │   ├── 📄 skeleton.tsx
+│   │   ├── 📄 slider.tsx
+│   │   ├── 📄 sonner.tsx
+│   │   ├── 📄 spinner.tsx
+│   │   ├── 📄 switch.tsx
+│   │   ├── 📄 table.tsx
+│   │   ├── 📄 tabs.tsx
+│   │   ├── 📄 textarea.tsx
+│   │   ├── 📄 toast.tsx
+│   │   ├── 📄 toaster.tsx
+│   │   ├── 📄 toggle-group.tsx
+│   │   ├── 📄 toggle.tsx
+│   │   ├── 📄 tooltip.tsx
+│   │   ├── 📄 use-mobile.tsx
+│   │   └── 📄 use-toast.ts
+│   ├── 📄 cta-section.tsx
+│   ├── 📄 features-section.tsx
+│   ├── 📄 footer.tsx
+│   ├── 📄 header.tsx
+│   ├── 📄 hero-section.tsx
+│   ├── 📄 how-it-works-section.tsx
+│   ├── 📄 stats-section.tsx
+│   └── 📄 theme-provider.tsx
+├── 📁 hooks
+│   ├── 📄 use-mobile.ts
+│   └── 📄 use-toast.ts
+├── 📁 lib
+│   └── 📄 utils.ts
+├── 📁 public
+│   ├── 🖼️ apple-icon.png
+│   ├── 🖼️ icon-dark-32x32.png
+│   ├── 🖼️ icon-light-32x32.png
+│   ├── 🖼️ icon.svg
+│   ├── 🖼️ placeholder-logo.png
+│   ├── 🖼️ placeholder-logo.svg
+│   ├── 🖼️ placeholder-user.jpg
+│   ├── 🖼️ placeholder.jpg
+│   └── 🖼️ placeholder.svg
+├── 📁 styles
+│   └── 🎨 globals.css
+├── ⚙️ .gitignore
+├── 📝 BACKEND_SETUP.md
+├── 📄 Dockerfile.backend
+├── 📄 Dockerfile.frontend
+├── 📝 README.md
+├── ⚙️ components.json
+├── ⚙️ docker-compose.yml
+├── 📄 next-env.d.ts
+├── 📄 next.config.mjs
+├── ⚙️ package-lock.json
+├── ⚙️ package.json
+├── 📄 postcss.config.mjs
+└── ⚙️ tsconfig.json
+```
 **Built with ❤️ for mental health awareness**
